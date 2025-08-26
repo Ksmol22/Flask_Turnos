@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Turnos Empresarial</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        ☰
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="nav-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img id="sidebarLogo" src="{{ url_for('static', filename='img/logo-default.png') }}" alt="Logo">
+                <div>
+                    <h3 id="sidebarTitle" class="sidebar-title">Sistema de Turnos</h3>
+                    <p class="sidebar-subtitle">Gestión Empresarial</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="#" class="nav-item active" onclick="showPage('dashboard')">
+                <span class="nav-item-icon">🏠</span>
+                <span class="nav-item-text">Panel Principal</span>
+                <span class="nav-item-desc">Vista general y estadísticas</span>
+            </a>
+            
+            <a href="#" class="nav-item" onclick="showPage('llamado-turno')">
+                <span class="nav-item-icon">📢</span>
+                <span class="nav-item-text">Llamado de Turnos</span>
+                <span class="nav-item-desc">Gestionar cola de atención</span>
+            </a>
+            
+            <a href="#" class="nav-item" onclick="showPage('asignar-cita')">
+                <span class="nav-item-icon">📝</span>
+                <span class="nav-item-text">Asignar Citas</span>
+                <span class="nav-item-desc">Crear turnos manualmente</span>
+            </a>
+            
+            <a href="#" class="nav-item" onclick="showPage('calendario')">
+                <span class="nav-item-icon">📅</span>
+                <span class="nav-item-text">Calendario</span>
+                <span class="nav-item-desc">Disponibilidad de horarios</span>
+            </a>
+            
+            <a href="#" class="nav-item" onclick="showPage('qr-citas')">
+                <span class="nav-item-icon">📱</span>
+                <span class="nav-item-text">Códigos QR</span>
+                <span class="nav-item-desc">Generar y escanear QR</span>
+            </a>
+            
+            <a href="#" class="nav-item" onclick="showPage('configuracion')">
+                <span class="nav-item-icon">⚙️</span>
+                <span class="nav-item-text">Configuración</span>
+                <span class="nav-item-desc">Ajustes del sistema</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page-content active">
+            <div class="content-header">
+                <div class="header-left">
+                    <h1 class="content-title">Panel Principal</h1>
+                    <p class="content-subtitle" id="currentDateTime">Cargando fecha y hora...</p>
+                </div>
+                <div class="header-right">
+                    <button id="speakerToggle" class="btn btn-outline speaker-toggle" onclick="toggleSpeaker()" title="Activar/Desactivar Narrador">
+                        🔊 <span id="speakerStatus">Activado</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="content-body">
+                <div class="dashboard-summary">
+                    <h2 class="dashboard-title">Bienvenido al Sistema de Turnos</h2>
+                    <p class="dashboard-subtitle">Gestiona eficientemente la atención de clientes</p>
+                </div>
+                
+                <div id="dashboardStats"></div>
+                
+            </div>
+        </div>
+        <!-- Llamado de Turno Page -->
+        <div id="llamado-turno" class="page-content">
+            <div class="content-header">
+                <h1 class="content-title">Llamado de Turnos</h1>
+                <p class="content-subtitle">Gestión de cola de atención en tiempo real</p>
+            </div>
+            
+            <div class="content-body">
+                <div id="statsContainer"></div>
+                <div id="queueContainer"></div>
+            </div>
+        </div>
+
+        <!-- Asignar Cita Page -->
+        <div id="asignar-cita" class="page-content">
+            <div class="content-header">
+                <h1 class="content-title">Asignar Nueva Cita</h1>
+                <p class="content-subtitle">Crear turnos manualmente para clientes</p>
+            </div>
+            
+            <div class="content-body">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📝</div>
+                        <span>Formulario de Nueva Cita</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="appointmentForm" onsubmit="assignAppointment(event)">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group">
+                                    <label for="nombre" class="form-label">Nombre Completo *</label>
+                                    <input type="text" id="nombre" name="nombre" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="telefono" class="form-label">Teléfono</label>
+                                    <input type="tel" id="telefono" name="telefono" class="form-input">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="servicio" class="form-label">Servicio *</label>
+                                <select id="serviceSelect" name="servicio" class="form-select" required>
+                                    <option value="">Seleccionar servicio...</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group">
+                                    <label for="fecha" class="form-label">Fecha *</label>
+                                    <input type="date" id="fecha" name="fecha" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="hora" class="form-label">Hora *</label>
+                                    <input type="time" id="hora" name="hora" class="form-input" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="observaciones" class="form-label">Observaciones</label>
+                                <textarea id="observaciones" name="observaciones" class="form-textarea" 
+                                          placeholder="Información adicional sobre la cita..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <span>✅</span>
+                                Asignar Cita
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="appointmentResult"></div>
+            </div>
+        </div>
+
+        <!-- Calendario Page -->
+        <div id="calendario" class="page-content">
+            <div class="content-header">
+                <h1 class="content-title">Calendario de Citas</h1>
+                <p class="content-subtitle">Vista de calendario con citas programadas</p>
+            </div>
+            
+            <div class="content-body">
+                <div class="calendar-wrapper">
+                    <div class="calendar-navigation">
+                        <button id="prevMonth" class="btn btn-outline" onclick="changeMonth(-1)">
+                            ◀ Anterior
+                        </button>
+                        <h3 id="currentMonthYear" class="calendar-title">
+                            <!-- Mes y año actual -->
+                        </h3>
+                        <button id="nextMonth" class="btn btn-outline" onclick="changeMonth(1)">
+                            Siguiente ▶
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <span class="legend-color pending"></span>
+                            <span>Pendiente</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color called"></span>
+                            <span>Llamado</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color completed"></span>
+                            <span>Atendido</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color cancelled"></span>
+                            <span>Cancelado</span>
+                        </div>
+                    </div>
+                    
+                    <div id="calendarGrid" class="calendar-grid">
+                        <!-- Calendario generado dinámicamente -->
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <div class="card-icon">�</div>
+                        <span>Citas del Día Seleccionado</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="selectedDayAppointments">
+                            <p class="empty-state">Selecciona un día para ver las citas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Citas Page -->
+        <div id="qr-citas" class="page-content">
+            <div class="content-header">
+                <h1 class="content-title">Gestión de Códigos QR</h1>
+                <p class="content-subtitle">Generar y escanear códigos QR para citas</p>
+            </div>
+            
+            <div class="content-body">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📱</div>
+                        <span>Acciones Disponibles</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                            <button class="btn btn-primary btn-large" onclick="generateQRAppointment()" style="height: 80px; flex-direction: column;">
+                                <span style="font-size: 24px;">➕</span>
+                                <span>Generar Nueva Cita QR</span>
+                                <small style="opacity: 0.8;">Crear turno con código QR</small>
+                            </button>
+                            
+                            <button class="btn btn-secondary btn-large" onclick="scanQRCode()" style="height: 80px; flex-direction: column;">
+                                <span style="font-size: 24px;">📷</span>
+                                <span>Escanear Código QR</span>
+                                <small style="opacity: 0.8;">Usar cámara para leer QR</small>
+                            </button>
+                            
+                            <button class="btn btn-outline-primary btn-large" onclick="manualQRInput()" style="height: 80px; flex-direction: column;">
+                                <span style="font-size: 24px;">⌨️</span>
+                                <span>Entrada Manual</span>
+                                <small style="opacity: 0.8;">Introducir código manualmente</small>
+                            </button>
+                        </div>
+                        
+                        <div id="qrScannerContainer" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+                
+                <div id="qrHistoryContainer"></div>
+            </div>
+        </div>
+
+        <!-- Configuración Page -->
+        <div id="configuracion" class="page-content">
+            <div class="content-header">
+                <h1 class="content-title">Configuración del Sistema</h1>
+                <p class="content-subtitle">Personalizar empresa, logo y horarios de atención</p>
+            </div>
+            
+            <div class="content-body">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🏢</div>
+                        <span>Información de la Empresa</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="configForm" onsubmit="updateConfiguration(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nombre de la Empresa</label>
+                                <input type="text" id="configNombreEmpresa" class="form-input" placeholder="Nombre de su empresa" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Logo de la Empresa</label>
+                                <div class="logo-upload-container">
+                                    <div class="logo-preview" onclick="document.getElementById('logoFile').click()">
+                                        <img id="logoPreview" src="static/img/logo-default.png" alt="Logo actual" class="logo-preview-img">
+                                        <div class="logo-overlay">
+                                            <span>Click para cambiar</span>
+                                        </div>
+                                    </div>
+                                    <div class="logo-upload-controls">
+                                        <input type="file" id="logoFile" accept="image/jpeg,image/jpg,image/png,image/gif" style="display: none;" onchange="previewLogo(this)">
+                                        <button type="button" class="btn btn-outline" onclick="document.getElementById('logoFile').click()">
+                                            <span>📷</span> Seleccionar Imagen
+                                        </button>
+                                        <small class="form-help">Formatos admitidos: JPG, PNG, GIF (máximo 2MB)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <span>💾</span>
+                                    Guardar Configuración
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="resetToDefaults()">
+                                    <span>🔄</span>
+                                    Restablecer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de Notificaciones -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/qr-scanner.js') }}"></script>
+</body>
+</html>
